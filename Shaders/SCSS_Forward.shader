@@ -1,36 +1,29 @@
 shader_type spatial;
 
-VertexOutput vert(appdata_full v) {
-	VertexOutput o = (VertexOutput)0;
-
-    UNITY_SETUP_INSTANCE_ID(v);
-    UNITY_INITIALIZE_OUTPUT(VertexOutput, o);
-    UNITY_TRANSFER_INSTANCE_ID(v, o);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
-	o.pos = UnityObjectToClipPos(v.vertex);
-	o.uv0 = AnimateTexcoords(v.texcoord);
-	o.uv1 = v.texcoord1;
-	o.normal = v.normal;
-	o.normalDir = UnityObjectToWorldNormal(v.normal);
-	o.tangentDir = UnityObjectToWorldDir(v.tangent.xyz);
-    half sign = v.tangent.w * unity_WorldTransformParams.w;
-	o.bitangentDir = cross(o.normalDir, o.tangentDir) * sign;
-	float4 objPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
-	o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-	o.vertex = v.vertex;
+void vertex() {
+	//o.pos = UnityObjectToClipPos(v.vertex);
+	UV = AnimateTexcoords(UV);
+	UV2 = UV2;
+	NORMAL = NORMAL;
+	//o.normalDir= UnityObjectToWorldNormal(v.normal);
+	//o.tangentDir = UnityObjectToWorldDir(v.tangent.xyz);
+    //float sign = v.tangent.w * unity_WorldTransformParams.w;
+	//o.bitangentDir = cross(o.normalDir, o .tangentDir) * sign;
+	//vec4 objPos = mul(unity_ObjectToWorld, vec4(0, 0, 0, 1));
+	posWorld = WORLD_MATRIX * vec4(VERTEX.xyz, 1.0);
+	//o.vertex = v.vertex;
 
 	// Extra data handling
 	// X: Outline width | Y: Ramp softness
 	// Z: Outline Z offset | 
 	if (_VertexColorType == 2) 
 	{
-		o.color = 1.0; // Reset
-		o.extraData = v.color;
+		extraData = COLOR;
+		COLOR = vec4(1.0); // Reset
 	} else {
-		o.color = v.color;
-		o.extraData = float4(0.0, 0.0, 1.0, 1.0); 
-		o.extraData.x = v.color.a;
+		extraData = vec4(0.0, 0.0, 1.0, 1.0); 
+		extraData.x = v.color.a;
+		COLOR = COLOR;
 	}
 
 	#if defined(SCSS_USE_OUTLINE_TEXTURE)
@@ -44,77 +37,67 @@ VertexOutput vert(appdata_full v) {
 	// That looks good at a distance, but not perfect. 
 	o.extraData.x *= min(distance(o.posWorld,_WorldSpaceCameraPos)*4, 1); 
 
-#if (UNITY_VERSION<600)
-	TRANSFER_SHADOW(o);
-#else
-	UNITY_TRANSFER_SHADOW(o, v.texcoord);
-#endif
-
-#if defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2)
-	UNITY_TRANSFER_FOG(o, o.pos);
-#endif
-
-#if defined(VERTEXLIGHT_ON)
-	o.vertexLight = VertexLightContribution(o.posWorld, o.normalDir);
-#endif
+//#if defined(VERTEXLIGHT_ON)
+//	o.vertexLight = VertexLightContribution(o.posWorld, o.normalDir);
+//#endif
 
 	return o;
 }
 
-VertexOutput vert_nogeom(appdata_full v) {
-	VertexOutput o = (VertexOutput)0;
+//VertexOutput vert_nogeom(appdata_full v) {
+//	VertexOutput o = (VertexOutput)0;
+//
+//	o = vert(v);
+//	
+//	o.extraData.x = false;
+//	return o;
+//}
 
-	o = vert(v);
-	
-	o.extraData.x = false;
-	return o;
-}
+// [maxvertexcount(6)]
+// void geom(triangle VertexOutput IN[3], inout TriangleStream<VertexOutput> tristream)
+// {
+//     #if defined(UNITY_REVERSED_Z)
+//         const float far_clip_value_raw = 0.0;
+//     #else
+//         const float far_clip_value_raw = 1.0;
+//     #endif
 
-[maxvertexcount(6)]
-void geom(triangle VertexOutput IN[3], inout TriangleStream<VertexOutput> tristream)
-{
-    #if defined(UNITY_REVERSED_Z)
-        const float far_clip_value_raw = 0.0;
-    #else
-        const float far_clip_value_raw = 1.0;
-    #endif
+// 	// Generate base vertex
+// 	[unroll]
+// 	for (int ii = 0; ii < 3; ii++)
+// 	{
+// 		VertexOutput o = IN[ii];
+// 		o.extraData.x = false;
 
-	// Generate base vertex
-	[unroll]
-	for (int ii = 0; ii < 3; ii++)
-	{
-		VertexOutput o = IN[ii];
-		o.extraData.x = false;
+// 		tristream.Append(o);
+// 	}
 
-		tristream.Append(o);
-	}
+// 	tristream.RestartStrip();
 
-	tristream.RestartStrip();
+// 	// Generate outline vertex
+// 	// If the outline triangle is too small, don't emit it.
+// 	if ((IN[0].extraData.r + IN[1].extraData.r + IN[2].extraData.r) >= 1.e-9)
+// 	{
+// 		[unroll]
+// 		for (int i = 2; i >= 0; i--)
+// 		{
+// 			VertexOutput o = IN[i];
+// 			o.pos = UnityObjectToClipPos(o.vertex + normalize(o.normal) * o.extraData.r);
 
-	// Generate outline vertex
-	// If the outline triangle is too small, don't emit it.
-	if ((IN[0].extraData.r + IN[1].extraData.r + IN[2].extraData.r) >= 1.e-9)
-	{
-		[unroll]
-		for (int i = 2; i >= 0; i--)
-		{
-			VertexOutput o = IN[i];
-			o.pos = UnityObjectToClipPos(o.vertex + normalize(o.normal) * o.extraData.r);
+// 			// Possible future parameter depending on what people need
+// 			float zPushLimit = lerp(far_clip_value_raw, o.pos.z, 0.9);
+// 			o.pos.z = lerp(zPushLimit, o.pos.z, o.extraData.z);
 
-			// Possible future parameter depending on what people need
-			float zPushLimit = lerp(far_clip_value_raw, o.pos.z, 0.9);
-			o.pos.z = lerp(zPushLimit, o.pos.z, o.extraData.z);
+// 			o.extraData.x = true;
 
-			o.extraData.x = true;
+// 			tristream.Append(o);
+// 		}
 
-			tristream.Append(o);
-		}
+// 		tristream.RestartStrip();
+// 	}
+// }
 
-		tristream.RestartStrip();
-	}
-}
-
-float4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
+vec4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
 {
 	float isOutline = i.extraData.x;
 	if (isOutline && !facing) discard;
@@ -139,7 +122,7 @@ float4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
 	
     float outlineDarken = 1-isOutline;
 
-	float4 texcoords = TexCoords(i);
+	vec4 texcoords = TexCoords(i);
 
 	// Ideally, we should pass all input to lighting functions through the 
 	// material parameter struct. But there are some things that are
@@ -148,23 +131,23 @@ float4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
 
 	SCSS_Input c = (SCSS_Input) 0;
 
-	half detailMask = DetailMask(texcoords.xy);
+	float detailMask = DetailMask(texcoords.xy);
 
-    half3 normalTangent = NormalInTangentSpace(texcoords, detailMask);
+    vec3 normalTangent = NormalInTangentSpace(texcoords, detailMask);
 
     // Thanks, Xiexe!
-    half3 tspace0 = half3(i.tangentDir.x, i.bitangentDir.x, i.normalDir.x);
-    half3 tspace1 = half3(i.tangentDir.y, i.bitangentDir.y, i.normalDir.y);
-    half3 tspace2 = half3(i.tangentDir.z, i.bitangentDir.z, i.normalDir.z);
+    vec3 tspace0 = vec3(i.tangentDir.x, i.bitangentDir.x, i.normalDir.x);
+    vec3 tspace1 = vec3(i.tangentDir.y, i.bitangentDir.y, i.normalDir.y);
+    vec3 tspace2 = vec3(i.tangentDir.z, i.bitangentDir.z, i.normalDir.z);
 
-    half3 calcedNormal;
+    vec3 calcedNormal;
     calcedNormal.x = dot(tspace0, normalTangent);
     calcedNormal.y = dot(tspace1, normalTangent);
     calcedNormal.z = dot(tspace2, normalTangent);
     
     calcedNormal = normalize(calcedNormal);
-    half3 bumpedTangent = (cross(i.bitangentDir, calcedNormal));
-    half3 bumpedBitangent = (cross(calcedNormal, bumpedTangent));
+    vec3 bumpedTangent = (cross(i.bitangentDir, calcedNormal));
+    vec3 bumpedBitangent = (cross(calcedNormal, bumpedTangent));
 
     // For our purposes, we'd like to keep the original normal in i, but warp the bi/tangents.
     c.normal = calcedNormal;
@@ -222,13 +205,13 @@ float4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
 
 	// Disable PBR dielectric setup in cel specular mode.
 	#if defined(_SPECGLOSSMAP)
-	#define unity_ColorSpaceDielectricSpec half4(0, 0, 0, 1)
+	#define unity_ColorSpaceDielectricSpec vec4(0, 0, 0, 1)
 	#endif 
 
 	//if (_SpecularType != 0 )
 	#if defined(_SPECULAR)
 	{
-		half4 specGloss = SpecularGloss(texcoords, detailMask);
+		vec4 specGloss = SpecularGloss(texcoords, detailMask);
 
 		c.specColor = specGloss.rgb;
 		c.smoothness = specGloss.a;
@@ -265,18 +248,18 @@ float4 frag(VertexOutput i, uint facing : SV_IsFrontFace) : SV_Target
 
     // When premultiplied mode is set, this will multiply the diffuse by the alpha component,
     // allowing to handle transparency in physically correct way - only diffuse component gets affected by alpha
-    half outputAlpha;
+    float outputAlpha;
     c.albedo = PreMultiplyAlpha (c.albedo, c.alpha, c.oneMinusReflectivity, /*out*/ outputAlpha);
 
 	// Lighting handling
-	float3 finalColor = SCSS_ApplyLighting(c, i, texcoords);
+	vec3 finalColor = SCSS_ApplyLighting(c, i, texcoords);
 
-	float3 lightmap = float4(1.0,1.0,1.0,1.0);
+	vec3 lightmap = vec4(1.0,1.0,1.0,1.0);
 	#if defined(LIGHTMAP_ON)
 		lightmap = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, i.uv1 * unity_LightmapST.xy + unity_LightmapST.zw));
 	#endif
 
-	fixed4 finalRGBA = fixed4(finalColor * lightmap, outputAlpha);
+	vec4 finalRGBA = vec4(finalColor * lightmap, outputAlpha);
 	UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
 	return finalRGBA;
 }
