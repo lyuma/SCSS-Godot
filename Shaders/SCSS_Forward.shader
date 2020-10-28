@@ -26,16 +26,19 @@ void vertex() {
 		COLOR = COLOR;
 	}
 
-	//#if defined(SCSS_USE_OUTLINE_TEXTURE)
-	extraData.x *= OutlineMask(UV);
-	//#endif
+	if (_OutlineMode != 0.0) {
+		// TODO: calculate outline
+		//#if defined(SCSS_USE_OUTLINE_TEXTURE)
+		extraData.x *= OutlineMask(UV);
+		//#endif
 
-	extraData.x *= _outline_width * .01; // Apply outline width and convert to cm
-	
-	// Scale outlines relative to the distance from the camera. Outlines close up look ugly in VR because
-	// they can have holes, being shells. This is also why it is clamped to not make them bigger.
-	// That looks good at a distance, but not perfect. 
-	extraData.x *= min(distance(posWorld.xyz,(CAMERA_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz)*4.0, 1.0); 
+		extraData.x *= _outline_width * .01; // Apply outline width and convert to cm
+		
+		// Scale outlines relative to the distance from the camera. Outlines close up look ugly in VR because
+		// they can have holes, being shells. This is also why it is clamped to not make them bigger.
+		// That looks good at a distance, but not perfect. 
+		extraData.x *= min(distance(posWorld.xyz,(CAMERA_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz)*4.0, 1.0); 
+	}
 
 	UV = AnimateTexcoords(UV, TIME);
 	UV2 = UV2;
@@ -162,7 +165,7 @@ void fragment()
 		unity_SHAb = vec4(world_space_up * delta_term.b, const_term.b);
 	}
 
-	float isOutline = extraData.x;
+	float isOutline = (_OutlineMode > 0.0 ? 1.0 : 0.0) * extraData.x;
 	//if (isOutline && !FRONT_FACING) discard;
 
 	// Backface correction. If a polygon is facing away from the camera, it's lit incorrectly.

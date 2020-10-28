@@ -486,7 +486,7 @@ vec3 SCSS_ShadeBase(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuatio
 {	
 	vec3 finalColor;
 
-	float isOutline = i.extraData.x;
+	float isOutline = (_OutlineMode > 0.0 ? 1.0 : 0.0) * i.extraData.x;
 
 	SCSS_LightParam d = initialiseLightParam(l, c.normal, i.posWorld.xyz, is_directional_light, l.dir);
 
@@ -541,7 +541,7 @@ vec3 SCSS_ShadeLight(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuati
 {
 	vec3 finalColor;
 
-	float isOutline = i.extraData.x;
+	float isOutline = (_OutlineMode > 0.0 ? 1.0 : 0.0) * i.extraData.x;
 
 	SCSS_LightParam d = initialiseLightParam(l, c.normal, i.posWorld.xyz, true, l.dir);
 
@@ -576,7 +576,7 @@ vec3 SCSS_ApplyLighting(SCSS_Input c, VertexOutput i, vec4 texcoords, SCSS_Light
 	//}
 
 
-	float isOutline = i.extraData.x;
+	float isOutline = (_OutlineMode > 0.0 ? 1.0 : 0.0) * i.extraData.x;
 
 	// Lighting parameters
 	//SCSS_Light l = MainLight(i.posWorld.xyz);
