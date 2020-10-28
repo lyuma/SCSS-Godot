@@ -421,7 +421,7 @@ void fragment()
 
 		SCSS_Light dirLight;
 		dirLight.cameraPos = baseCameraPos;
-		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb);
+		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb) / UNITY_PI;
 		dirLight.intensity = 1.0; // For now.
 		dirLight.dir = mat3(CAMERA_MATRIX) * Unity_SafeNormalize(GET_DIR_LIGHT_DIRECTION(ld).xyz);
 		dirLight.attenuation = shadow;
@@ -463,7 +463,7 @@ void fragment()
 
 		SCSS_Light dirLight;
 		dirLight.cameraPos = vec3(0.0); // working in view space
-		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb);
+		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb) / UNITY_PI;
 		dirLight.intensity = 1.0; // For now.
 		dirLight.dir = Unity_SafeNormalize(GET_DIR_LIGHT_DIRECTION(ld).xyz);
 		dirLight.attenuation = shadow;
@@ -489,7 +489,7 @@ void fragment()
 		pointLight.cameraPos = vec3(0.0); // working in view space
 		pointLight.dir = Unity_SafeNormalize(GET_LIGHT_POSITION(ld).xyz - VERTEX);
 		float atten = GET_OMNI_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
-		pointLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb;
+		pointLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb / UNITY_PI;
 		pointLight.intensity = 1.0; // For now.
 		pointLight.attenuation = shadow * atten;
 
@@ -514,7 +514,7 @@ void fragment()
 		spotLight.cameraPos = vec3(0.0); // working in view space
 		spotLight.dir = Unity_SafeNormalize(GET_LIGHT_POSITION(ld).xyz - VERTEX);
 		float atten = GET_SPOT_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
-		spotLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb;
+		spotLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb / UNITY_PI;
 		spotLight.intensity = 1.0; // For now.
 		spotLight.attenuation = shadow * atten;
 
