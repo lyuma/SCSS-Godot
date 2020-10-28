@@ -1,5 +1,5 @@
 shader_type spatial;
-
+render_mode cull_disabled;
 import "res://SCSS/Shaders/SCSS_Core.shader";
 
 void vertex() {
@@ -361,11 +361,10 @@ void fragment()
 		vec3 specular_light;
 		vec4 reflection_accum = vec4(0.0, 0.0, 0.0, 0.0);
 		vec4 ambient_accum = vec4(0.0, 0.0, 0.0, 0.0);
-	    vec3 viewView = -VIEW;
 		vec3 env_reflection_light = vec3(0.0);
 		float specMagnitude = max(c.specColor.r, max(c.specColor.g, c.specColor.b));
 		float roughness_val = _SPECGLOSSMAP() ? 1.0 : c.perceptualRoughness;
-		AMBIENT_PROCESS(VERTEX, c.normal, roughness_val, specMagnitude, false, viewView, vec2(0.0), ambient_light, diffuse_light, specular_light);
+		AMBIENT_PROCESS(VERTEX, c.normal, roughness_val, specMagnitude, false, VIEW, vec2(0.0), ambient_light, diffuse_light, specular_light);
 		for (uint idx = uint(0); idx < REFLECTION_PROBE_COUNT(CLUSTER_CELL); idx++) {
 			REFLECTION_PROCESS(CLUSTER_CELL, idx, VERTEX, c.normal, roughness_val, ambient_light, specular_light, ambient_accum, reflection_accum);
 		}
