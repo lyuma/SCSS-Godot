@@ -181,11 +181,9 @@ Shader "Silent's Cel Shading/Crosstone"
         }
 
         CGINCLUDE
-		#pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
-		#pragma multi_compile _ UNITY_HDR_ON
-
-		#define SCSS_CROSSTONE
-		#define SCSS_USE_OUTLINE_TEXTURE
+		// #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+		const bool SCSS_CROSSTONE = true;
+		const bool SCSS_USE_OUTLINE_TEXTURE = true;
         ENDCG
 
 		Pass
