@@ -107,20 +107,29 @@ void fragment()
 	// Initialize SH coefficients.
 	LightmapCapture lc;
 	if (GET_LIGHTMAP_SH(lc)) {
-		// TODO: Investigate multiplying by constants as in:
+		const float c1 = 0.429043;
+		const float c2 = 0.511664;
+		const float c3 = 0.743125;
+		const float c4 = 0.886227;
+		const float c5 = 0.247708;
+		// multiplying by constants as in:
 		// https://github.com/mrdoob/three.js/pull/16275/files
-		vec3 constterm = SH_COEF(lc, uint(0)).rgb;
-		unity_SHAr = vec4(SH_COEF(lc, uint(1)).rgb, constterm.r);
-		unity_SHAg = vec4(SH_COEF(lc, uint(2)).rgb, constterm.g);
-		unity_SHAb = vec4(SH_COEF(lc, uint(3)).rgb, constterm.b);
-		vec3 shbX = SH_COEF(lc, uint(4)).rgb;
-		vec3 shbY = SH_COEF(lc, uint(5)).rgb;
-		vec3 shbZ = SH_COEF(lc, uint(6)).rgb;
-		vec3 shbW = SH_COEF(lc, uint(7)).rgb;
+		vec3 constterm = c4 * SH_COEF(lc, uint(0)).rgb - c5 * SH_COEF(lc, uint(6)).rgb;
+		vec3 shaX = 2.0 * c2 * SH_COEF(lc, uint(3)).rgb;
+		vec3 shaY = 2.0 * c2 * SH_COEF(lc, uint(1)).rgb;
+		vec3 shaZ = 2.0 * c2 * SH_COEF(lc, uint(2)).rgb;
+		vec3 shbX = 2.0 * c1 * SH_COEF(lc, uint(4)).rgb;
+		vec3 shbY = 2.0 * c1 * SH_COEF(lc, uint(5)).rgb;
+		vec3 shbZ = c3 * SH_COEF(lc, uint(6)).rgb;
+		vec3 shbW = 2.0 * c1 * SH_COEF(lc, uint(7)).rgb;
+		vec3 shc = c1 * SH_COEF(lc, uint(8)).rgb;
+		unity_SHAr = vec4(shaX.r, shaY.r, shaZ.r, constterm.r);
+		unity_SHAg = vec4(shaX.g, shaY.g, shaZ.g, constterm.g);
+		unity_SHAb = vec4(shaX.b, shaY.b, shaZ.b, constterm.b);
 		unity_SHBr = vec4(shbX.r, shbY.r, shbZ.r, shbW.r);
 		unity_SHBg = vec4(shbX.g, shbY.g, shbZ.g, shbW.g);
 		unity_SHBb = vec4(shbX.b, shbY.b, shbZ.b, shbW.b);
-		unity_SHC = vec4(SH_COEF(lc, uint(8)).rgb,0.0);
+		unity_SHC = vec4(shc, 0.0);
 	} else {
 		// Indirect Light
 	    vec4 reflection_accum;
@@ -219,6 +228,7 @@ void fragment()
 	c.albedo = Albedo(texcoords);
 
 	c.emission = Emission(texcoords.xy);
+	vec3 decalEmission = vec3(0.0);
 
 	if (!SCSS_CROSSTONE) {
 		c.tone0 = Tonemap(texcoords.xy, c.occlusion);
@@ -243,11 +253,11 @@ void fragment()
 				c.tone1.col.rgb = mix(c.tone0.col.rgb, decal_albedo.rgb, decal_albedo.a);
 			}
 			c.albedo.rgb = mix(c.albedo.rgb, decal_albedo.rgb, decal_albedo.a);
-			c.normal = normalize(mix(c.normal, decal_normal.rgb, decal_normal.a));
+			normalTangent = normalize(mix(normalTangent, decal_normal.rgb, decal_normal.a));
 			//AO = mix(AO, decal_orm.r, decal_orm.a);
 			c.smoothness = 1.0 - mix(1.0 - c.smoothness, decal_orm.g, decal_orm.a);
 			//METALLIC = mix(METALLIC, decal_orm.b, decal_orm.a);
-			c.emission += decal_emission;
+			decalEmission += decal_emission;
 		}
 	}
 
@@ -449,6 +459,9 @@ void fragment()
 	unity_SHBb *= 1.0e+10;
 	unity_SHC *= 1.0e+10;
 
+	vec3 vertex_ddx = dFdx(VERTEX);
+	vec3 vertex_ddy = dFdy(VERTEX);
+
 	for (uint idx = uint(0); idx < DIRECTIONAL_LIGHT_COUNT(); idx++) {
 		if (idx == main_dir_light) {
 			continue;
@@ -482,8 +495,9 @@ void fragment()
 		float transmittance_z = 0.0;
 		float shadow;
 		vec3 shadow_color_enabled = GET_LIGHT_SHADOW_COLOR(ld).rgb;
+		vec3 no_shadow = vec3(1.0);
 		if (OMNI_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow, transmittance_z)) {
-			//vec3 no_shadow = OMNI_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
+			no_shadow = OMNI_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
 			//shadow_attenuation = mix(shadow_color_enabled.rgb, no_shadow, shadow);
 		}
 
@@ -496,7 +510,14 @@ void fragment()
 		pointLight.attenuation = shadow * atten;
 
 		// Lighting handling
-		finalColor += SCSS_ApplyLighting(c, i, texcoords, pointLight, false, false, TIME);
+		vec3 shadowResult = SCSS_ApplyLighting(c, i, texcoords, pointLight, false, false, TIME);
+		if (any(notEqual(shadow_color_enabled, vec3(0.0)))) {
+			pointLight.attenuation = atten;
+			vec3 nonshadowResult = SCSS_ApplyLighting(c, i, texcoords, pointLight, false, false, TIME);
+			finalColor += no_shadow * shadowResult + shadow_color_enabled * (nonshadowResult - shadowResult);
+		} else {
+			finalColor += no_shadow * shadowResult;
+		}
 	}
 	for (uint idx = uint(0); idx < SPOT_LIGHT_COUNT(CLUSTER_CELL); idx++) {
 		LightData ld = GET_SPOT_LIGHT(CLUSTER_CELL, idx);
@@ -507,8 +528,9 @@ void fragment()
 		float transmittance_z = 0.0;
 		float shadow;
 		vec3 shadow_color_enabled = GET_LIGHT_SHADOW_COLOR(ld).rgb;
+		vec3 no_shadow = vec3(1.0);
 		if (SPOT_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow, transmittance_z)) {
-			//vec3 no_shadow = SPOT_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
+			no_shadow = SPOT_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
 			//shadow_attenuation = mix(shadow_color_enabled.rgb, no_shadow, shadow);
 		}
 
@@ -521,7 +543,14 @@ void fragment()
 		spotLight.attenuation = shadow * atten;
 
 		// Lighting handling
-		finalColor += SCSS_ApplyLighting(c, i, texcoords, spotLight, false, false, TIME);
+		vec3 shadowResult = SCSS_ApplyLighting(c, i, texcoords, spotLight, false, false, TIME);
+		if (any(notEqual(shadow_color_enabled, vec3(0.0)))) {
+			spotLight.attenuation = atten;
+			vec3 nonshadowResult = SCSS_ApplyLighting(c, i, texcoords, spotLight, false, false, TIME);
+			finalColor += no_shadow * shadowResult + shadow_color_enabled * (nonshadowResult - shadowResult);
+		} else {
+			finalColor += no_shadow * shadowResult;
+		}
 	}
 
 	vec3 lightmap = vec3(1.0,1.0,1.0);
@@ -530,7 +559,7 @@ void fragment()
 	// #endif
 	// TODO: make sure we handle lightmapped case.
 
-	vec4 finalRGBA = vec4(finalColor * lightmap, outputAlpha);
+	vec4 finalRGBA = vec4(finalColor * lightmap, outputAlpha) + vec4(decalEmission, 0.0);
 	// UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
 	//return finalRGBA;
 	EMISSION = finalRGBA.rgb;
