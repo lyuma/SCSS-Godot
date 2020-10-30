@@ -1,4 +1,4 @@
-shader_type spatial;
+//shader_type spatial;
 
 // Portability functions. Overloads not possible.
 vec4 saturate4(vec4 x) {

@@ -1,4 +1,4 @@
-shader_type spatial;
+//shader_type spatial;
 
 //---------------------------------------
 

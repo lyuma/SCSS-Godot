@@ -1,4 +1,4 @@
-shader_type spatial;
+//shader_type spatial;
 // Perform full-quality light calculations on unimportant lights.
 // Considering our target GPUs, this is a big visual improvement
 // for a small performance penalty.
