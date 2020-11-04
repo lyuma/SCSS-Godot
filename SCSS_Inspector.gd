@@ -1,4 +1,4 @@
-tool
+@tool
 extends ShaderMaterial
 
 var shader_float_to_int : Dictionary = {
