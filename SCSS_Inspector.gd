@@ -117,7 +117,8 @@ func to_srgb(c: Color) -> Color:
 		12.92 * c.b if c.b < 0.0031308 else (1.0 + 0.055) * pow(c.b, 1.0 / 2.4) - 0.055,
 		c.a)
 
-func _get(property):
+func _get(propertyname):
+	var property = str(propertyname)
 	if shader_fake_params.has(property):
 		# return null if ret == false else 0
 		return null
@@ -130,18 +131,19 @@ func _get(property):
 		if shader_float_to_int.has(property):
 			if typeof(ret) != typeof(1.234):
 				print("property " + str(property) + " type " + str(typeof(ret)) + " ret " + str(ret))
-			ret = int(ret)
+			return int(ret)
 		if shader_float_to_bool.has(property):
-			ret = false if ret == 0.0 else true
+			return false if ret == 0.0 else true
 		if shader_int_to_bool.has(property):
-			ret = false if ret == 0 else true
+			return false if ret == 0 else true
 		if not raw_value and shader_vec3_to_color.has(property):
-			ret = to_srgb(Color(ret.x, ret.y, ret.z))
+			return to_srgb(Color(ret.x, ret.y, ret.z))
 		if not raw_value and shader_vec4_to_color.has(property):
-			ret = to_srgb(Color(ret.normal.x, ret.normal.y, ret.normal.z, ret.d))
+			return to_srgb(Color(ret.normal.x, ret.normal.y, ret.normal.z, ret.d))
 		return ret
 
-func _set(property, value):
+func _set(propertyname, value):
+	var property = str(propertyname)
 	if shader_fake_params.has(property):
 		# value = false if (value == null) else true
 		return true
