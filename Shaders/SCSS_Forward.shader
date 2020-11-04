@@ -33,7 +33,7 @@ void vertex() {
 		//#endif
 
 		extraData.x *= _outline_width * .01; // Apply outline width and convert to cm
-		
+
 		// Scale outlines relative to the distance from the camera. Outlines close up look ugly in VR because
 		// they can have holes, being shells. This is also why it is clamped to not make them bigger.
 		// That looks good at a distance, but not perfect. 
@@ -102,77 +102,72 @@ void vertex() {
 // 	}
 // }
 
+SCSS_Input c = SCSS_Input(
+	vec3(0.0),0.0,vec3(0.0),0.0,vec3(0.0),0.0,0.0,0.0,0.0,vec3(0.0),vec3(0.0),
+	SCSS_RimLightInput(0.0,0.0,vec3(0.0),0.0,0.0,0.0,vec3(0.0),0.0),
+	SCSS_TonemapInput(vec3(0.0),0.0),
+	SCSS_TonemapInput(vec3(0.0),0.0),
+	vec3(0.0));
+
+VertexOutput i = VertexOutput(vec3(0.0),vec3(0.0),vec3(0.0),vec3(0.0),vec4(0.0),vec2(0.0));
+
+VertexOutput iWorldSpace;
+
+vec4 texcoords;
+
 void fragment()
 {
 	// Initialize SH coefficients.
-	LightmapCapture lc;
-	if (GET_LIGHTMAP_SH(lc)) {
-		const float c1 = 0.429043;
-		const float c2 = 0.511664;
-		const float c3 = 0.743125;
-		const float c4 = 0.886227;
-		const float c5 = 0.247708;
-		// multiplying by constants as in:
-		// https://github.com/mrdoob/three.js/pull/16275/files
-		vec3 constterm = c4 * SH_COEF(lc, uint(0)).rgb - c5 * SH_COEF(lc, uint(6)).rgb;
-		vec3 shaX = 2.0 * c2 * SH_COEF(lc, uint(3)).rgb;
-		vec3 shaY = 2.0 * c2 * SH_COEF(lc, uint(1)).rgb;
-		vec3 shaZ = 2.0 * c2 * SH_COEF(lc, uint(2)).rgb;
-		vec3 shbX = 2.0 * c1 * SH_COEF(lc, uint(4)).rgb;
-		vec3 shbY = 2.0 * c1 * SH_COEF(lc, uint(5)).rgb;
-		vec3 shbZ = c3 * SH_COEF(lc, uint(6)).rgb;
-		vec3 shbW = 2.0 * c1 * SH_COEF(lc, uint(7)).rgb;
-		vec3 shc = c1 * SH_COEF(lc, uint(8)).rgb;
-		unity_SHAr = vec4(shaX.r, shaY.r, shaZ.r, constterm.r);
-		unity_SHAg = vec4(shaX.g, shaY.g, shaZ.g, constterm.g);
-		unity_SHAb = vec4(shaX.b, shaY.b, shaZ.b, constterm.b);
-		unity_SHBr = vec4(shbX.r, shbY.r, shbZ.r, shbW.r);
-		unity_SHBg = vec4(shbX.g, shbY.g, shbZ.g, shbW.g);
-		unity_SHBb = vec4(shbX.b, shbY.b, shbZ.b, shbW.b);
-		unity_SHC = vec4(shc, 0.0);
-	} else {
+	//LightmapCapture lc;
+	//if (GET_LIGHTMAP_SH(lc)) {
+	//	const float c1 = 0.429043;
+	//	const float c2 = 0.511664;
+	//	const float c3 = 0.743125;
+	//	const float c4 = 0.886227;
+	//	const float c5 = 0.247708;
+	//	// multiplying by constants as in:
+	//	// https://github.com/mrdoob/three.js/pull/16275/files
+	//	vec3 constterm = c4 * SH_COEF(lc, uint(0)).rgb - c5 * SH_COEF(lc, uint(6)).rgb;
+	//	vec3 shaX = 2.0 * c2 * SH_COEF(lc, uint(3)).rgb;
+	//	vec3 shaY = 2.0 * c2 * SH_COEF(lc, uint(1)).rgb;
+	//	vec3 shaZ = 2.0 * c2 * SH_COEF(lc, uint(2)).rgb;
+	//	vec3 shbX = 2.0 * c1 * SH_COEF(lc, uint(4)).rgb;
+	//	vec3 shbY = 2.0 * c1 * SH_COEF(lc, uint(5)).rgb;
+	//	vec3 shbZ = c3 * SH_COEF(lc, uint(6)).rgb;
+	//	vec3 shbW = 2.0 * c1 * SH_COEF(lc, uint(7)).rgb;
+	//	vec3 shc = c1 * SH_COEF(lc, uint(8)).rgb;
+	//	unity_SHAr = vec4(shaX.r, shaY.r, shaZ.r, constterm.r);
+	//	unity_SHAg = vec4(shaX.g, shaY.g, shaZ.g, constterm.g);
+	//	unity_SHAb = vec4(shaX.b, shaY.b, shaZ.b, constterm.b);
+	//	unity_SHBr = vec4(shbX.r, shbY.r, shbZ.r, shbW.r);
+	//	unity_SHBg = vec4(shbX.g, shbY.g, shbZ.g, shbW.g);
+	//	unity_SHBb = vec4(shbX.b, shbY.b, shbZ.b, shbW.b);
+	//	unity_SHC = vec4(shc, 0.0);
+	//} else {
 		// Indirect Light
 	    vec4 reflection_accum;
 	    vec4 ambient_accum;
-		
-		vec3 env_reflection_light = vec3(0.0);
-		
+
 		vec3 world_space_up = vec3(0.0,1.0,0.0);
 		vec3 up_normal = mat3(INV_CAMERA_MATRIX) * world_space_up;
 
 		vec3 ambient_light_up;
 		vec3 diffuse_light_up;
 		vec3 specular_light_up;
-		reflection_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		ambient_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		AMBIENT_PROCESS(VERTEX, up_normal, ROUGHNESS, SPECULAR, false, VIEW, vec2(0.0), ambient_light_up, diffuse_light_up, specular_light_up);
-	    for (uint idx = uint(0); idx < REFLECTION_PROBE_COUNT(CLUSTER_CELL); idx++) {
-			REFLECTION_PROCESS(CLUSTER_CELL, idx, VERTEX, up_normal, ROUGHNESS, ambient_light_up, specular_light_up, ambient_accum, reflection_accum);
-	    }
-	    if (ambient_accum.a > 0.0) {
-			ambient_light_up = ambient_accum.rgb / ambient_accum.a;
-	    }
-		
-		
+		AMBIENT_PROCESS(VERTEX, up_normal, ROUGHNESS, SPECULAR, METALLIC, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_up, diffuse_light_up, specular_light_up);
+
 		vec3 ambient_light_down;
 		vec3 diffuse_light_down;
 		vec3 specular_light_down;
-		reflection_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		ambient_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		AMBIENT_PROCESS(VERTEX, -up_normal, ROUGHNESS, SPECULAR, false, VIEW, vec2(0.0), ambient_light_down, diffuse_light_down, specular_light_down);
-		for (uint idx = uint(0); idx < REFLECTION_PROBE_COUNT(CLUSTER_CELL); idx++) {
-			REFLECTION_PROCESS(CLUSTER_CELL, idx, VERTEX, -up_normal, ROUGHNESS, ambient_light_down, specular_light_down, ambient_accum, reflection_accum);
-		}
-		if (ambient_accum.a > 0.0) {
-			ambient_light_down = ambient_accum.rgb / ambient_accum.a;
-		}
+		AMBIENT_PROCESS(VERTEX, -up_normal, ROUGHNESS, SPECULAR, METALLIC, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light_down, diffuse_light_down, specular_light_down);
+
 		vec3 const_term = mix(ambient_light_down, ambient_light_up, 0.5);
 		vec3 delta_term = 0.5*(ambient_light_up - ambient_light_down);
 
 		unity_SHAr = vec4(world_space_up * delta_term.r, const_term.r);
 		unity_SHAg = vec4(world_space_up * delta_term.g, const_term.g);
 		unity_SHAb = vec4(world_space_up * delta_term.b, const_term.b);
-	}
+	//}
 
 	float isOutline = (_OutlineMode > 0.0 ? 1.0 : 0.0) * extraData.x;
 	//if (isOutline && !FRONT_FACING) discard;
@@ -192,22 +187,15 @@ void fragment()
 	// {
 	//     isOutline = max(isOutline, 1-innerOutline(i));
 	// }
-	
+
     float outlineDarken = 1.0-isOutline;
 
-	vec4 texcoords = TexCoords(UV, UV2);
+	texcoords = TexCoords(UV, UV2);
 
 	// Ideally, we should pass all input to lighting functions through the 
 	// material parameter struct. But there are some things that are
 	// optional. Review this at a later date...
 	//i.uv0 = texcoords; 
-
-	SCSS_Input c = SCSS_Input(
-		vec3(0.0),0.0,vec3(0.0),0.0,vec3(0.0),0.0,0.0,0.0,0.0,vec3(0.0),vec3(0.0),
-		SCSS_RimLightInput(0.0,0.0,vec3(0.0),0.0,0.0,0.0,vec3(0.0),0.0),
-		SCSS_TonemapInput(vec3(0.0),0.0),
-		SCSS_TonemapInput(vec3(0.0),0.0),
-		vec3(0.0));
 
 	float detailMask = DetailMask(texcoords.xy);
 
@@ -228,7 +216,6 @@ void fragment()
 	c.albedo = Albedo(texcoords);
 
 	c.emission = Emission(texcoords.xy);
-	vec3 decalEmission = vec3(0.0);
 
 	if (!SCSS_CROSSTONE) {
 		c.tone0 = Tonemap(texcoords.xy, c.occlusion);
@@ -241,52 +228,58 @@ void fragment()
 		c.occlusion = ShadingGradeMap(texcoords.xy);
 	}
 
-	for (uint idx = uint(0); idx < DECAL_COUNT(CLUSTER_CELL); idx++) {
-		vec3 decal_emission;
-		vec4 decal_albedo;
-		vec4 decal_normal;
-		vec4 decal_orm;
-		vec3 uv_local;
-		if (DECAL_PROCESS(CLUSTER_CELL, idx, VERTEX, dFdx(VERTEX), dFdy(VERTEX), NORMAL, uv_local, decal_albedo, decal_normal, decal_orm, decal_emission)) {
-			if (SCSS_CROSSTONE && _CrosstoneToneSeparation == 1.0) {
-				c.tone0.col.rgb = mix(c.tone0.col.rgb, decal_albedo.rgb, decal_albedo.a);
-				c.tone1.col.rgb = mix(c.tone0.col.rgb, decal_albedo.rgb, decal_albedo.a);
-			}
-			c.albedo.rgb = mix(c.albedo.rgb, decal_albedo.rgb, decal_albedo.a);
-			normalTangent = normalize(mix(normalTangent, decal_normal.rgb, decal_normal.a));
-			//AO = mix(AO, decal_orm.r, decal_orm.a);
-			c.smoothness = 1.0 - mix(1.0 - c.smoothness, decal_orm.g, decal_orm.a);
-			//METALLIC = mix(METALLIC, decal_orm.b, decal_orm.a);
-			decalEmission += decal_emission;
+	{
+		float tmp0;
+		float tmp1;
+		float tmp2;
+		vec3 tmp3;
+		float roughness = 1.0 - c.smoothness;
+		vec3 tmpNormal = c.normal;
+		vec3 tmpAlbedo = c.albedo;
+		vec3 tmpEmission = c.emission;
+		float tmpOcclusion = c.occlusion;
+		APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmpOcclusion, roughness, tmp1);
+		c.normal = tmpNormal;
+		c.albedo = tmpAlbedo;
+		c.emission = tmpEmission;
+		c.occlusion = tmpOcclusion;
+		if (SCSS_CROSSTONE && _CrosstoneToneSeparation == 1.0) {
+			tmpAlbedo = c.tone0.col;
+			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
+			c.tone0.col = tmpAlbedo;
+			tmpAlbedo = c.tone1.col;
+			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
+			c.tone1.col = tmpAlbedo;
 		}
+		c.smoothness = 1.0 - roughness;
 	}
 
-	VertexOutput i;
 	i.uv0 = texcoords.xy;
 	i.posWorld = posWorld.xyz;
 	i.extraData = extraData;
 	i.normalDir = NORMAL;
+	
 	i.tangentDir = TANGENT;
 	i.bitangentDir = BINORMAL;
 
-    // Thanks, Xiexe!
-    vec3 tspace0 = vec3(TANGENT.x, BINORMAL.x, NORMAL.x);
-    vec3 tspace1 = vec3(TANGENT.y, BINORMAL.y, NORMAL.y);
-    vec3 tspace2 = vec3(TANGENT.z, BINORMAL.z, NORMAL.z);
+	// Thanks, Xiexe!
+	vec3 tspace0 = vec3(TANGENT.x, BINORMAL.x, NORMAL.x);
+	vec3 tspace1 = vec3(TANGENT.y, BINORMAL.y, NORMAL.y);
+	vec3 tspace2 = vec3(TANGENT.z, BINORMAL.z, NORMAL.z);
 
-    vec3 calcedNormal;
-    calcedNormal.x = dot(tspace0, normalTangent);
-    calcedNormal.y = dot(tspace1, normalTangent);
-    calcedNormal.z = dot(tspace2, normalTangent);
-    
-    calcedNormal = normalize(calcedNormal);
-    vec3 bumpedTangent = (cross(BINORMAL, calcedNormal));
-    vec3 bumpedBitangent = (cross(calcedNormal, bumpedTangent));
+	vec3 calcedNormal;
+	calcedNormal.x = dot(tspace0, normalTangent);
+	calcedNormal.y = dot(tspace1, normalTangent);
+	calcedNormal.z = dot(tspace2, normalTangent);
 
-    // For our purposes, we'd like to keep the original normal in i, but warp the bi/tangents.
-    c.normal = calcedNormal;
-    i.tangentDir = bumpedTangent;
-    i.bitangentDir = bumpedBitangent;
+	calcedNormal = normalize(calcedNormal);
+	vec3 bumpedTangent = (cross(BINORMAL, calcedNormal));
+	vec3 bumpedBitangent = (cross(calcedNormal, bumpedTangent));
+
+	// For our purposes, we'd like to keep the original normal in i, but warp the bi/tangents.
+	c.normal = calcedNormal;
+	i.tangentDir = bumpedTangent;
+	i.bitangentDir = bumpedBitangent;
 
 	// Vertex colour application. 
 	switch (int(_VertexColorType))
@@ -295,7 +288,7 @@ void fragment()
 		case 0: c.albedo = c.albedo * COLOR.rgb; break;
 		case 1: c.albedo = mix(c.albedo, COLOR.rgb, isOutline); break;
 	}
-	
+
 	c.softness = extraData.g;
 
 	c.alpha = Alpha(texcoords.xy);
@@ -309,7 +302,7 @@ void fragment()
 	vec3 baseCameraPos = (CAMERA_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz;
     vec3 baseWorldPos = (WORLD_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz;
 	applyVanishing(baseCameraPos, baseWorldPos, c.alpha);
-	
+
 	if (applyAlphaClip(TIME, c.alpha, _Cutoff, SCREEN_UV.xy * VIEWPORT_SIZE, _AlphaSharp)) {
 		discard;
 	}
@@ -369,21 +362,10 @@ void fragment()
 		vec3 ambient_light;
 		vec3 diffuse_light;
 		vec3 specular_light;
-		vec4 reflection_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		vec4 ambient_accum = vec4(0.0, 0.0, 0.0, 0.0);
-		vec3 env_reflection_light = vec3(0.0);
 		float specMagnitude = max(c.specColor.r, max(c.specColor.g, c.specColor.b));
 		float roughness_val = _SPECGLOSSMAP() ? 1.0 : c.perceptualRoughness;
-		AMBIENT_PROCESS(VERTEX, c.normal, roughness_val, specMagnitude, false, VIEW, vec2(0.0), ambient_light, diffuse_light, specular_light);
-		for (uint idx = uint(0); idx < REFLECTION_PROBE_COUNT(CLUSTER_CELL); idx++) {
-			REFLECTION_PROCESS(CLUSTER_CELL, idx, VERTEX, c.normal, roughness_val, ambient_light, specular_light, ambient_accum, reflection_accum);
-		}
-		if (ambient_accum.a > 0.0) {
-			ambient_light = ambient_accum.rgb / ambient_accum.a;
-		}
-		if (reflection_accum.a > 0.0) {
-			specular_light = reflection_accum.rgb / reflection_accum.a;
-		}
+		AMBIENT_PROCESS(VERTEX, c.normal, roughness_val, specMagnitude, 0.0, vec2(0.0), vec4(0.0), vec4(0.0), ambient_light, diffuse_light, specular_light);
+
 		c.specular_light = specular_light;
 	}
 
@@ -391,30 +373,13 @@ void fragment()
 	//	c.alpha = 1.0;
 	//#endif
 
-    // When premultiplied mode is set, this will multiply the diffuse by the alpha component,
-    // allowing to handle transparency in physically correct way - only diffuse component gets affected by alpha
-    float outputAlpha;
-    c.albedo = PreMultiplyAlpha (c.albedo, c.alpha, c.oneMinusReflectivity, /*out*/ outputAlpha);
+	// When premultiplied mode is set, this will multiply the diffuse by the alpha component,
+	// allowing to handle transparency in physically correct way - only diffuse component gets affected by alpha
+	float outputAlpha;
+	c.albedo = PreMultiplyAlpha (c.albedo, c.alpha, c.oneMinusReflectivity, /*out*/ outputAlpha);
 
-	float dir_light_intensity = 0.0;
-	uint main_dir_light = uint(0);
-	for (uint idx = uint(0); idx < DIRECTIONAL_LIGHT_COUNT(); idx++) {
-		DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(idx);
-		if (!SHOULD_RENDER_DIR_LIGHT(ld)) {
-			continue;
-		}
-		vec3 thisLightColor = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb);
-		float this_intensity = max(thisLightColor.r, max(thisLightColor.g, thisLightColor.b));
-		if (this_intensity <= dir_light_intensity + 0.00001) {
-			continue;
-		}
-		dir_light_intensity = this_intensity;
-		main_dir_light = idx;
-	}
 
-	vec3 finalColor = vec3(0.0);
-
-	VertexOutput iWorldSpace = i;
+	iWorldSpace = i;
 	iWorldSpace.normalDir = mat3(CAMERA_MATRIX) * i.normalDir;
 	iWorldSpace.tangentDir = mat3(CAMERA_MATRIX) * i.tangentDir;
 	iWorldSpace.bitangentDir = mat3(CAMERA_MATRIX) * i.bitangentDir;
@@ -424,23 +389,9 @@ void fragment()
 	// This is because SH9 works in world space.
 	// We run other ligthting in view space.
 
-	if (dir_light_intensity > 0.0) {
-		DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(main_dir_light);
-		vec3 shadow_color = vec3(1.0);
-		float shadow;
-		float transmittance_z = 1.0;
-		DIRECTIONAL_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow_color, shadow, transmittance_z);
+	AMBIENT_LIGHT = vec3(0.0);
 
-		SCSS_Light dirLight;
-		dirLight.cameraPos = baseCameraPos;
-		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb) / UNITY_PI;
-		dirLight.intensity = 1.0; // For now.
-		dirLight.dir = mat3(CAMERA_MATRIX) * Unity_SafeNormalize(GET_DIR_LIGHT_DIRECTION(ld).xyz);
-		dirLight.attenuation = shadow;
-
-		// Lighting handling
-		finalColor = SCSS_ApplyLighting(c, iWorldSpace, texcoords, dirLight, true, true, TIME);
-	} else {
+	if (!HAS_MAIN_LIGHT) {
 		SCSS_Light dirLight;
 		dirLight.cameraPos = baseCameraPos;
 		dirLight.color = vec3(0.0);
@@ -448,125 +399,61 @@ void fragment()
 		dirLight.dir = vec3(0.0,1.0,0.0); // already world space.
 		dirLight.attenuation = 1.0;
 
-		finalColor = SCSS_ApplyLighting(c, iWorldSpace, texcoords, dirLight, true, false, TIME);
+		DIFFUSE_LIGHT = SCSS_ApplyLighting(c, iWorldSpace, texcoords, dirLight, true, false, TIME, SPECULAR_LIGHT);
+	} else {
+		DIFFUSE_LIGHT = vec3(0.0);
+		SPECULAR_LIGHT = vec3(0.0);
 	}
 
-	c.normal = oldCNormal; // Restore normals to view space.
+	// c.normal = oldCNormal; // Restore normals to view space.
+	NORMAL = c.normal;
 
-	// Deliberately corrupt this data to make sure it's not being used.
-	unity_SHBr /= (length(NORMAL) - 1.0);
-	unity_SHBg /= (length(NORMAL) - 1.0);
-	unity_SHBb *= 1.0e+10;
-	unity_SHC *= 1.0e+10;
+	vec4 emissionDetail = EmissionDetail(texcoords.zw, TIME);
 
-	vec3 vertex_ddx = dFdx(VERTEX);
-	vec3 vertex_ddy = dFdy(VERTEX);
+	// ALPHA = outputAlpha;
 
-	for (uint idx = uint(0); idx < DIRECTIONAL_LIGHT_COUNT(); idx++) {
-		if (idx == main_dir_light) {
-			continue;
-		}
-		DirectionalLightData ld = GET_DIRECTIONAL_LIGHT(idx);
-		if (!SHOULD_RENDER_DIR_LIGHT(ld)) {
-			continue;
-		}
+	ALBEDO = c.albedo;
 
-		vec3 shadow_color = vec3(1.0);
-		float shadow;
-		float transmittance_z = 1.0;
-		DIRECTIONAL_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow_color, shadow, transmittance_z);
-
-		SCSS_Light dirLight;
-		dirLight.cameraPos = vec3(0.0); // working in view space
-		dirLight.color = (GET_DIR_LIGHT_COLOR_SPECULAR(ld).rgb) / UNITY_PI;
-		dirLight.intensity = 1.0; // For now.
-		dirLight.dir = Unity_SafeNormalize(GET_DIR_LIGHT_DIRECTION(ld).xyz);
-		dirLight.attenuation = shadow;
-
-		// Lighting handling
-		finalColor += SCSS_ApplyLighting(c, i, texcoords, dirLight, false, true, TIME);
-	}
-	for (uint idx = uint(0); idx < OMNI_LIGHT_COUNT(CLUSTER_CELL); idx++) {
-		LightData ld = GET_OMNI_LIGHT(CLUSTER_CELL, idx);
-		if (!SHOULD_RENDER_LIGHT(ld)) {
-			continue;
-		}
-
-		float transmittance_z = 0.0;
-		float shadow;
-		vec3 shadow_color_enabled = GET_LIGHT_SHADOW_COLOR(ld).rgb;
-		vec3 no_shadow = vec3(1.0);
-		if (OMNI_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow, transmittance_z)) {
-			no_shadow = OMNI_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
-			//shadow_attenuation = mix(shadow_color_enabled.rgb, no_shadow, shadow);
-		}
-
-		SCSS_Light pointLight;
-		pointLight.cameraPos = vec3(0.0); // working in view space
-		pointLight.dir = Unity_SafeNormalize(GET_LIGHT_POSITION(ld).xyz - VERTEX);
-		float atten = GET_OMNI_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
-		pointLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb / UNITY_PI;
-		pointLight.intensity = 1.0; // For now.
-		pointLight.attenuation = shadow * atten;
-
-		// Lighting handling
-		vec3 shadowResult = SCSS_ApplyLighting(c, i, texcoords, pointLight, false, false, TIME);
-		if (any(notEqual(shadow_color_enabled, vec3(0.0)))) {
-			pointLight.attenuation = atten;
-			vec3 nonshadowResult = SCSS_ApplyLighting(c, i, texcoords, pointLight, false, false, TIME);
-			finalColor += no_shadow * shadowResult + shadow_color_enabled * (nonshadowResult - shadowResult);
-		} else {
-			finalColor += no_shadow * shadowResult;
-		}
-	}
-	for (uint idx = uint(0); idx < SPOT_LIGHT_COUNT(CLUSTER_CELL); idx++) {
-		LightData ld = GET_SPOT_LIGHT(CLUSTER_CELL, idx);
-		if (!SHOULD_RENDER_LIGHT(ld)) {
-			continue;
-		}
-			
-		float transmittance_z = 0.0;
-		float shadow;
-		vec3 shadow_color_enabled = GET_LIGHT_SHADOW_COLOR(ld).rgb;
-		vec3 no_shadow = vec3(1.0);
-		if (SPOT_SHADOW_PROCESS(ld, VERTEX, NORMAL, shadow, transmittance_z)) {
-			no_shadow = SPOT_PROJECTOR_PROCESS(ld, VERTEX, vertex_ddx, vertex_ddy);
-			//shadow_attenuation = mix(shadow_color_enabled.rgb, no_shadow, shadow);
-		}
-
-		SCSS_Light spotLight;
-		spotLight.cameraPos = vec3(0.0); // working in view space
-		spotLight.dir = Unity_SafeNormalize(GET_LIGHT_POSITION(ld).xyz - VERTEX);
-		float atten = GET_SPOT_LIGHT_ATTENUATION_SIZE(ld, VERTEX).x;
-		spotLight.color = GET_LIGHT_COLOR_SPECULAR(ld).rgb / UNITY_PI;
-		spotLight.intensity = 1.0; // For now.
-		spotLight.attenuation = shadow * atten;
-
-		// Lighting handling
-		vec3 shadowResult = SCSS_ApplyLighting(c, i, texcoords, spotLight, false, false, TIME);
-		if (any(notEqual(shadow_color_enabled, vec3(0.0)))) {
-			spotLight.attenuation = atten;
-			vec3 nonshadowResult = SCSS_ApplyLighting(c, i, texcoords, spotLight, false, false, TIME);
-			finalColor += no_shadow * shadowResult + shadow_color_enabled * (nonshadowResult - shadowResult);
-		} else {
-			finalColor += no_shadow * shadowResult;
-		}
-	}
-
-	vec3 lightmap = vec3(1.0,1.0,1.0);
-	// #if defined(LIGHTMAP_ON)
-	// 	lightmap = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, i.uv1 * unity_LightmapST.xy + unity_LightmapST.zw));
-	// #endif
-	// TODO: make sure we handle lightmapped case.
-
-	vec4 finalRGBA = vec4(finalColor * lightmap, outputAlpha) + vec4(decalEmission, 0.0);
-	// UNITY_APPLY_FOG(i.fogCoord, finalRGBA);
-	//return finalRGBA;
-	EMISSION = finalRGBA.rgb;
-	ALBEDO = vec3(0.0);
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
-	AMBIENT_LIGHT = vec3(0.0);
-	DIFFUSE_LIGHT = vec3(0.0);
-	SPECULAR_LIGHT = vec3(0.0);
+	METALLIC =  0.0;
+}
+
+void light() {
+	vec3 baseCameraPos = (CAMERA_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz;
+    vec3 baseWorldPos = (WORLD_MATRIX * vec4(0.0,0.0,0.0,1.0)).xyz;
+	vec3 finalColor = vec3(0.0);
+	vec3 specularColor = vec3(0.0);
+	if (IS_MAIN_LIGHT) {
+		SCSS_Light dirLight;
+		dirLight.cameraPos = baseCameraPos;
+		dirLight.color = (LIGHT_COLOR.rgb) / UNITY_PI;
+		dirLight.intensity = 1.0; // For now.
+		dirLight.dir = mat3(CAMERA_MATRIX) * Unity_SafeNormalize(LIGHT);
+		dirLight.attenuation = length(vec3(SHADOW_ATTENUATION))/length(vec3(1.0));
+
+		// Lighting handling
+		finalColor = SCSS_ApplyLighting(c, iWorldSpace, texcoords, dirLight, true, true, TIME, specularColor);
+	} else {
+
+		SCSS_Light pointLight;
+		pointLight.cameraPos = baseCameraPos;
+		pointLight.dir = mat3(CAMERA_MATRIX) * Unity_SafeNormalize(LIGHT);
+		pointLight.color = LIGHT_COLOR.rgb / UNITY_PI;
+		pointLight.intensity = 1.0; // For now.
+		pointLight.attenuation = length(vec3(SHADOW_ATTENUATION * ATTENUATION))/length(vec3(1.0));
+
+		// Lighting handling
+		vec3 shadowResult = SCSS_ApplyLighting(c, iWorldSpace, texcoords, pointLight, false, false, TIME, specularColor);
+		if (any(notEqual(SHADOW_COLOR, vec3(0.0)))) {
+			vec3 tmp;
+			pointLight.attenuation = length(vec3(ATTENUATION))/length(vec3(1.0));
+			vec3 nonshadowResult = SCSS_ApplyLighting(c, iWorldSpace, texcoords, pointLight, false, false, TIME, tmp);
+			finalColor += PROJECTOR_COLOR * shadowResult + SHADOW_COLOR * (nonshadowResult - shadowResult);
+		} else {
+			finalColor += PROJECTOR_COLOR * shadowResult;
+		}
+	}
+	DIFFUSE_LIGHT += finalColor;
+	SPECULAR_LIGHT += specularColor;
 }

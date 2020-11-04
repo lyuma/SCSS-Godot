@@ -66,7 +66,7 @@ uniform bool HEADERELSE_LIGHT_RAMP_SETTINGS;
 //#if !defined(SCSS_CROSSTONE)
 uniform bool ENUM_HORIZONTAL_VERTICAL_NONE;
 uniform float _LightRampType : hint_range(0,2,1) = 0.0;
-uniform sampler2D _Ramp;
+uniform sampler2D _Ramp : repeat_disable;
 //uniform vec4 _Ramp_ST;
 uniform bool ENUM_OCCLUSION_TONE_AUTO;
 uniform float _ShadowMaskType : hint_range(0,2,1) = 0.0;

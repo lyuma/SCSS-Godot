@@ -95,7 +95,7 @@ import "res://SCSS/Shaders/SCSS_Input.shader";
 vec3 getSubsurfaceScatteringLight (SCSS_Light l, vec3 normalDirection, vec3 viewDirection, 
     float attenuation, vec3 thickness, vec3 indirectLight) //  indirectLight = vec3(0.0)
 {
-    vec3 vSSLight = l.dir + normalDirection * _SSSDist; // Distortion
+    vec3 vSSLight = (l.dir + normalDirection * _SSSDist); // Distortion
     vec3 vdotSS = vec3(pow(saturate(dot(viewDirection, -vSSLight)), _SSSPow)) 
         * _SSSIntensity; 
     
@@ -482,7 +482,7 @@ vec3 calcSpecularCel(SCSS_Input c, float perceptualRoughness, float attenuation,
 	return calcSpecularCelInt(c.specColor, c.smoothness, c.normal, c.oneMinusReflectivity, perceptualRoughness, attenuation, d, l, i, c.specular_light.rgb);
 }
 
-vec3 SCSS_ShadeBase(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuation, bool is_directional_light)
+vec3 SCSS_ShadeBase(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuation, bool is_directional_light, out vec3 specularColor)
 {	
 	vec3 finalColor;
 
@@ -513,6 +513,8 @@ vec3 SCSS_ShadeBase(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuatio
 	fL.dir = Unity_SafeNormalize(fL.dir + (unity_SHAr.xyz + unity_SHAg.xyz + unity_SHAb.xyz) * _LightSkew.xyz);
 	fD = initialiseLightParam(fL, c.normal, i.posWorld.xyz, is_directional_light, l.dir);
 
+	specularColor = vec3(0.0);
+
 	if (isOutline <= 0.0)
 	{
 		if (_SUBSURFACE) {
@@ -526,18 +528,18 @@ vec3 SCSS_ShadeBase(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuatio
 		}
 
 		if (_METALLICGLOSSMAP()) {
-	    finalColor += calcSpecularBase(c, c.perceptualRoughness, attenuation, d, l, i);
-	    }
+			specularColor += calcSpecularBase(c, c.perceptualRoughness, attenuation, d, l, i);
+		}
 
-	    if (_SPECGLOSSMAP()) {
-    	finalColor += calcSpecularCel(c, c.perceptualRoughness, attenuation, fD, fL, i);
+		if (_SPECGLOSSMAP()) {
+			specularColor += calcSpecularCel(c, c.perceptualRoughness, attenuation, fD, fL, i);
    		}
     }
 
     return finalColor;
 }
 
-vec3 SCSS_ShadeLight(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuation)
+vec3 SCSS_ShadeLight(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuation, out vec3 specularColor)
 {
 	vec3 finalColor;
 
@@ -545,7 +547,9 @@ vec3 SCSS_ShadeLight(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuati
 
 	SCSS_LightParam d = initialiseLightParam(l, c.normal, i.posWorld.xyz, true, l.dir);
 
-    finalColor = calcDiffuseAdd(c.albedo, c.tone0, c.tone1, c.occlusion, c.perceptualRoughness, c.softness, d, l);
+	finalColor = calcDiffuseAdd(c.albedo, c.tone0, c.tone1, c.occlusion, c.perceptualRoughness, c.softness, d, l);
+
+	specularColor = vec3(0.0);
 
 	if (isOutline <= 0.0)
 	{
@@ -555,18 +559,17 @@ vec3 SCSS_ShadeLight(SCSS_Input c, VertexOutput i, SCSS_Light l, float attenuati
 		}
 
 		if (_METALLICGLOSSMAP()) {
-    	finalColor += calcSpecularAdd(c, c.perceptualRoughness, d, l, i);
+    	specularColor += calcSpecularAdd(c, c.perceptualRoughness, d, l, i);
     	}
 
 		if (_SPECGLOSSMAP()) {
-		finalColor += calcSpecularCel(c, c.perceptualRoughness, attenuation, d, l, i);
+		specularColor += calcSpecularCel(c, c.perceptualRoughness, attenuation, d, l, i);
 		}
 	}
 	return finalColor;
 }
 
-
-vec3 SCSS_ApplyLighting(SCSS_Input c, VertexOutput i, vec4 texcoords, SCSS_Light l, bool is_base_pass, bool is_directional_light, float time)
+vec3 SCSS_ApplyLighting(SCSS_Input c, VertexOutput i, vec4 texcoords, SCSS_Light l, bool is_base_pass, bool is_directional_light, float time, out vec3 specularColor)
 {
 	//UNITY_LIGHT_ATTENUATION(attenuation, i, i.posWorld.xyz);
 
@@ -646,15 +649,10 @@ vec3 SCSS_ApplyLighting(SCSS_Input c, VertexOutput i, vec4 texcoords, SCSS_Light
 	}
 
 	if (is_base_pass) {
-	finalColor = SCSS_ShadeBase(c, i, l, l.attenuation, is_directional_light);
+	finalColor = SCSS_ShadeBase(c, i, l, l.attenuation, is_directional_light, specularColor);
 	} else {
-	finalColor = SCSS_ShadeLight(c, i, l, l.attenuation);
+	finalColor = SCSS_ShadeLight(c, i, l, l.attenuation, specularColor);
 	}
-
-	// Proper cheap vertex lights. 
-	//if (VERTEXLIGHT_ON) && !defined(SCSS_UNIMPORTANT_LIGHTS_FRAGMENT) {
-	//finalColor += c.albedo * calcVertexLight(i.vertexLight, c.occlusion, c.tone, c.softness);
-	//}
 
 	// Ambient
 	if (_UseFresnel == 2.0 && isOutline <= 0.0)
@@ -663,47 +661,25 @@ vec3 SCSS_ApplyLighting(SCSS_Input c, VertexOutput i, vec4 texcoords, SCSS_Light
 			c.rim.power) * c.rim.tint * c.rim.alpha;
 		sharpFresnel += sharpenLighting(d.rlPow4.y * c.rim.invWidth * fresnelLightMaskInv,
 			c.rim.invPower) * c.rim.invTint * c.rim.invAlpha * _FresnelLightMask;
-		finalColor += effectLighting*sharpFresnel;
+		specularColor += effectLighting*sharpFresnel;
 	}
-
-	//vec3 wrappedDiffuse = LightColour * saturate((dot(N, L) + w) / ((1 + w) * (1 + w)));
-
-    //// Workaround for scenes with HDR off blowing out in VRchat.
-    //#if !UNITY_HDR_ON && SCSS_CLAMP_IN_NON_HDR
-    //    l.color = saturate3(l.color);
-    //}
-
-    // Apply full lighting to unimportant lights. This is cheaper than you might expect.
-	// if (UNITY_PASS_FORWARDBASE) && defined(VERTEXLIGHT_ON) && defined(SCSS_UNIMPORTANT_LIGHTS_FRAGMENT) {
-    // for (int num = 0; num < 4; num++) {
-    // 	UNITY_BRANCH if ((unity_LightColor[num].r + unity_LightColor[num].g + unity_LightColor[num].b + i.vertexLight[num]) != 0.0)
-    // 	{
-    // 	l.color = unity_LightColor[num].rgb;
-    // 	l.dir = normalize(vec3(unity_4LightPosX0[num], unity_4LightPosY0[num], unity_4LightPosZ0[num]) - i.posWorld.xyz);
-
-	// 	finalColor += SCSS_ShadeLight(c, i, l, 1) *  i.vertexLight[num];	
-    // 	}
-    // };
-	// }
 
 	if (!is_base_pass) {
 		finalColor *= l.attenuation;
+		specularColor *= l.attenuation;
 	}
 
 	finalColor *= _LightWrappingCompensationFactor;
 
 	if (is_base_pass) {
-	vec3 emission;
-	vec4 emissionDetail = EmissionDetail(texcoords.zw, time);
+		vec4 emissionDetail = EmissionDetail(texcoords.zw, time);
 
-	finalColor = max(vec3(0.0), finalColor - saturate3(vec3(1.0-emissionDetail.w)- (vec3(1.0)-c.emission)));
-	emission = emissionDetail.rgb * c.emission * _EmissionColor.rgb;
+		vec3 targetFinalColor = finalColor - saturate3(vec3(1.0-emissionDetail.w)- (vec3(1.0)-c.emission));
+		specularColor = max(vec3(0.0), specularColor + min(targetFinalColor, vec3(0.0)));
+		finalColor = max(vec3(0.0), targetFinalColor);
 
-	// Emissive c.rim. To restore masking behaviour, multiply by emissionMask.
-	emission += _CustomFresnelColor.xyz * (pow(d.rlPow4.y, 1.0/(_CustomFresnelColor.w+0.0001)));
-
-	emission *= (1.0-isOutline);
-	finalColor += emission;
+		// Emissive c.rim. To restore masking behaviour, multiply by emissionMask.
+		specularColor += _CustomFresnelColor.xyz * (pow(d.rlPow4.y, 1.0/(_CustomFresnelColor.w+0.0001))) * (1.0-isOutline);
 	}
 
 	return finalColor;
