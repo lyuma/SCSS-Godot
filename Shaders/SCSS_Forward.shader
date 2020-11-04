@@ -228,32 +228,6 @@ void fragment()
 		c.occlusion = ShadingGradeMap(texcoords.xy);
 	}
 
-	{
-		float tmp0;
-		float tmp1;
-		float tmp2;
-		vec3 tmp3;
-		float roughness = 1.0 - c.smoothness;
-		vec3 tmpNormal = c.normal;
-		vec3 tmpAlbedo = c.albedo;
-		vec3 tmpEmission = c.emission;
-		float tmpOcclusion = c.occlusion;
-		APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmpOcclusion, roughness, tmp1);
-		c.normal = tmpNormal;
-		c.albedo = tmpAlbedo;
-		c.emission = tmpEmission;
-		c.occlusion = tmpOcclusion;
-		if (SCSS_CROSSTONE && _CrosstoneToneSeparation == 1.0) {
-			tmpAlbedo = c.tone0.col;
-			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
-			c.tone0.col = tmpAlbedo;
-			tmpAlbedo = c.tone1.col;
-			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
-			c.tone1.col = tmpAlbedo;
-		}
-		c.smoothness = 1.0 - roughness;
-	}
-
 	i.uv0 = texcoords.xy;
 	i.posWorld = posWorld.xyz;
 	i.extraData = extraData;
@@ -273,6 +247,33 @@ void fragment()
 	calcedNormal.z = dot(tspace2, normalTangent);
 
 	calcedNormal = normalize(calcedNormal);
+
+	vec3 extraEmission = vec3(0.0);
+	{
+		float tmp0;
+		float tmp1;
+		float tmp2;
+		vec3 tmp3;
+		float roughness = 1.0 - c.smoothness;
+		vec3 tmpAlbedo = c.albedo;
+		float tmpOcclusion = c.occlusion;
+		vec3 tmpNormal = calcedNormal;
+		vec3 tmpEmission;
+		APPLY_DECALS(VERTEX, calcedNormal, tmpAlbedo, extraEmission, tmpOcclusion, roughness, tmp1);
+
+		c.albedo = tmpAlbedo;
+		c.occlusion = tmpOcclusion;
+		if (SCSS_CROSSTONE && _CrosstoneToneSeparation == 1.0) {
+			tmpAlbedo = c.tone0.col;
+			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
+			c.tone0.col = tmpAlbedo;
+			tmpAlbedo = c.tone1.col;
+			APPLY_DECALS(VERTEX, tmpNormal, tmpAlbedo, tmpEmission, tmp0, tmp1, tmp2);
+			c.tone1.col = tmpAlbedo;
+		}
+		c.smoothness = 1.0 - roughness;
+	}
+
 	vec3 bumpedTangent = (cross(BINORMAL, calcedNormal));
 	vec3 bumpedBitangent = (cross(calcedNormal, bumpedTangent));
 
@@ -413,6 +414,7 @@ void fragment()
 	// ALPHA = outputAlpha;
 
 	ALBEDO = c.albedo;
+	EMISSION = extraEmission + emissionDetail.rgb * c.emission * _EmissionColor.rgb * (1.0 - isOutline);
 
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
