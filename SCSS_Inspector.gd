@@ -206,7 +206,7 @@ func _get_property_list():
 		'name': '_Color_VALUE',
 	})
 	props.push_back({
-		'type': TYPE_REAL,
+		'type': TYPE_FLOAT,
 		'hint': PROPERTY_HINT_RANGE,
 		'usage': PROPERTY_USAGE_EDITOR,
 		'name': '_Cutoff',
@@ -240,7 +240,7 @@ func _get_property_list():
 		'name': '_BumpMap',
 	})
 	props.push_back({
-		'type': TYPE_REAL,
+		'type': TYPE_FLOAT,
 		'hint': PROPERTY_HINT_NONE,
 		'usage': PROPERTY_USAGE_EDITOR,
 		'name': '_BumpScale',
@@ -331,28 +331,28 @@ func _get_property_list():
 			'name': '_2nd_ShadeColor_VALUE',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_1st_ShadeColor_Step',
 			'hint_string': '0,1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_1st_ShadeColor_Feather',
 			'hint_string': '0.001, 1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_2nd_ShadeColor_Step',
 			'hint_string': '0,1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_2nd_ShadeColor_Feather',
@@ -366,7 +366,7 @@ func _get_property_list():
 			'name': '_ShadingGradeMap',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Tweak_ShadingGradeMapLevel',
@@ -421,21 +421,21 @@ func _get_property_list():
 			'name': '_ShadowMaskColor_VALUE',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Shadow',
 			'hint_string': '0,1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_ShadowLift',
 			'hint_string': '-1,1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_IndirectLightingBoost',
@@ -470,7 +470,7 @@ func _get_property_list():
 			'name': '_OutlineMask_ST',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_outline_width',
@@ -494,7 +494,7 @@ func _get_property_list():
 			'name': '_UseInteriorOutline',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_InteriorOutlineWidth',
@@ -516,14 +516,14 @@ func _get_property_list():
 	})
 	if _get('_UseFresnel'):
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_FresnelWidth',
 			'hint_string': '0,20',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_FresnelStrength',
@@ -566,14 +566,14 @@ func _get_property_list():
 			'name': '_FresnelTintInv_VALUE',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_FresnelWidthInv',
 			'hint_string': '0,20',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_FresnelStrengthInv',
@@ -632,25 +632,25 @@ func _get_property_list():
 			'name': '_UseEnergyConservation',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Smoothness',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_CelSpecularSoftness',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_CelSpecularSteps',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Anisotropy',
@@ -691,7 +691,7 @@ func _get_property_list():
 			'name': '_Matcap1',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Matcap1Strength',
@@ -712,7 +712,7 @@ func _get_property_list():
 			'name': '_Matcap2',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Matcap2Strength',
@@ -733,7 +733,7 @@ func _get_property_list():
 			'name': '_Matcap3',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Matcap3Strength',
@@ -754,7 +754,7 @@ func _get_property_list():
 			'name': '_Matcap4',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_Matcap4Strength',
@@ -795,7 +795,7 @@ func _get_property_list():
 			'name': '_DetailAlbedoMap_ST',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_DetailAlbedoMapScale',
@@ -808,7 +808,7 @@ func _get_property_list():
 			'name': '_DetailNormalMap',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_DetailNormalMapScale',
@@ -821,7 +821,7 @@ func _get_property_list():
 			'name': '_SpecularDetailMask',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_SpecularDetailStrength',
@@ -873,7 +873,7 @@ func _get_property_list():
 			'name': '_ThicknessMapInvert',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_ThicknessMapPower',
@@ -892,28 +892,28 @@ func _get_property_list():
 			'name': '_SSSCol_VALUE',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_SSSIntensity',
 			'hint_string': '0.0,10.0',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_SSSPow',
 			'hint_string': '0.01,10.0',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_SSSDist',
 			'hint_string': '0,10',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_RANGE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_SSSAmbient',
@@ -934,7 +934,7 @@ func _get_property_list():
 	})
 	if _get('_UseAnimation'):
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_AnimationSpeed',
@@ -978,13 +978,13 @@ func _get_property_list():
 	})
 	if _get('_UseVanishing'):
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_VanishingStart',
 		})
 		props.push_back({
-			'type': TYPE_REAL,
+			'type': TYPE_FLOAT,
 			'hint': PROPERTY_HINT_NONE,
 			'usage': PROPERTY_USAGE_EDITOR,
 			'name': '_VanishingEnd',
@@ -1048,14 +1048,14 @@ func _get_property_list():
 		'name': '_LightSkew',
 	})
 	props.push_back({
-		'type': TYPE_REAL,
+		'type': TYPE_FLOAT,
 		'hint': PROPERTY_HINT_RANGE,
 		'usage': PROPERTY_USAGE_EDITOR,
 		'name': '_DiffuseGeomShadowFactor',
 		'hint_string': '0,1',
 	})
 	props.push_back({
-		'type': TYPE_REAL,
+		'type': TYPE_FLOAT,
 		'hint': PROPERTY_HINT_RANGE,
 		'usage': PROPERTY_USAGE_EDITOR,
 		'name': '_LightWrappingCompensationFactor',
