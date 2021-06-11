@@ -129,6 +129,8 @@ func _get(propertyname):
 	if shader.has_param(property):
 		var ret = get_shader_param(property)
 		if shader_float_to_int.has(property):
+			if typeof(ret) == typeof(null):
+				return ret
 			if typeof(ret) != typeof(1.234):
 				print("property " + str(property) + " type " + str(typeof(ret)) + " ret " + str(ret))
 			return int(ret)
